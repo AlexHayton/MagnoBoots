@@ -1,0 +1,7 @@
+<game>
+	<name>MagnoBoots</name>
+	<description>Magno Boots for Natural Selection 2</description>
+	<client>lua/MagnoBoots/Client.lua</client>
+	<server>lua/MagnoBoots/Server.lua</server>
+	<predict>lua/MagnoBoots/Predict.lua</predict>
+</game>
