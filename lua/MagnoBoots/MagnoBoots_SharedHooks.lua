@@ -12,3 +12,6 @@ Script.Load("lua/fsfod/fsfod_scripts.lua")
 
 // Load any global hooks here.
 Script.Load("lua/MagnoBoots/MagnoBoots_TechData.lua")
+Script.Load("lua/MagnoBoots/MagnoBoots_MarineTeam.lua")
+Script.Load("lua/MagnoBoots/MagnoBoots_MarineCommander.lua")
+Script.Load("lua/MagnoBoots/MagnoBoots_Marine.lua")

@@ -100,7 +100,7 @@ ClassHooker = {
   end
 end
 
-Script.Load("lua/DispatchBuilder.lua")
+Script.Load("lua/fsfod/DispatchBuilder.lua")
 
 ClassHooker.ClassObjectToName[Entity] = "Entity"
 

@@ -15,7 +15,7 @@ Script.Load("lua/SelectableMixin.lua")
 
 class 'MagnoBoots' (ScriptActor)
 
-Jetpack.kMapName = "magnoboots"
+MagnoBoots.kMapName = "magnoboots"
 
 MagnoBoots.kModelName = PrecacheAsset("models/marine/jetpack/jetpack.model")
 MagnoBoots.kAttachPoint = "Boots"

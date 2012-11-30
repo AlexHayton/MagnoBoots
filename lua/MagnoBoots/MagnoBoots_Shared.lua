@@ -8,5 +8,5 @@
 // MagnoBoots_Shared.lua
 
 // Load any globally defined classes and script files here.
-Script.Load("lua/MagnoBootsMixin.lua")
-Script.Load("lua/MagnoBoots.lua")
+Script.Load("lua/MagnoBoots/MagnoBootsMixin.lua")
+Script.Load("lua/MagnoBoots/MagnoBoots.lua")

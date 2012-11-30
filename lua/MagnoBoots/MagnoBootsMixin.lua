@@ -48,7 +48,7 @@ MagnoBootsMixin.networkVars =
 
 function MagnoBootsMixin:__initmixin()
 
-	if self.hasMagnoBoots = nil then
+	if self.hasMagnoBoots == nil then
 		self.hasMagnoBoots = false
 	end
 	
