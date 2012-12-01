@@ -6,17 +6,32 @@
 //________________________________
 
 // MagnoBoots_Marine.lua
-
 MagnoBootsMarine = MagnoBootsMarine or {}
 ClassHooker:Mixin("MagnoBootsMarine")
     
 function MagnoBootsMarine:OnLoad()
    
     ClassHooker:SetClassCreatedIn("Marine", "lua/Marine.lua") 
+	LoadTracker:HookFileLoadBefore("Marine", self, "AddScriptLoads")
+	ClassHooker:ClassDeclaredCallback("Marine", self, "AddNetworkVars")
     self:PostHookClassFunction("Marine", "OnCreate", "OnCreate_Hook")
 	
 	LoadTracker:HookFileLoadFinished("lua/Marine.lua", self, "AddNewFunctions")
     
+end
+
+function MagnoBootsMarine:AddScriptLoads()
+	
+	Script.Load("lua/MagnoBoots/MagnoBootsMixin.lua")
+
+end
+
+function MagnoBootsMarine:AddNetworkVars(self, classname, networkVars)
+
+	if (networkVars) then
+		AddMixinNetworkVars(MagnoBootsMixin, networkVars)
+	end
+
 end
 
 function MagnoBootsMarine:OnCreate_Hook(self)

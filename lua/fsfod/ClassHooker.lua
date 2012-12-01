@@ -710,7 +710,7 @@ function ClassHooker:ClassDeclaredCallback(classname, FuncOrSelf, callbackFuncNa
   end
 
   if(callbackFuncName) then
-    table.insert(self.ClassDeclaredCb[classname],  {FuncOrSelf, FuncOrThis[callbackFuncName]})
+    table.insert(self.ClassDeclaredCb[classname],  {FuncOrSelf[callbackFuncName], FuncOrSelf})
   else
     table.insert(self.ClassDeclaredCb[classname], FuncOrSelf)
   end

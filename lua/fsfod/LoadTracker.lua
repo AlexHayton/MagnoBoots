@@ -10,6 +10,7 @@ if(not LoadTracker) then
   	LoadedScripts = {},
   	
   	LoadAfterScripts = {},
+	BeforeLoadedFileHooks = {},
   	LoadedFileHooks = {},
   	OverridedFiles = {},
   }
@@ -50,6 +51,13 @@ function LoadTracker:ScriptLoadStart(normalizedsPath, unnormalizedsPath)
 	--store the stack index so we can be sure were not reacting to a double load of the same file
 	if(not self.LoadedScripts[normalizedsPath]) then
 		self.LoadedScripts[normalizedsPath] = #self.LoadStack
+			
+		-- load any hooks that are supposed to trigger before the file is loaded in.
+		if(self.BeforeLoadedFileHooks[normalizedsPath]) then
+			for _,hook in ipairs(self.BeforeLoadedFileHooks[normalizedsPath]) do
+				hook()
+			end
+		end
 		
 		local FileOverride = self.OverridedFiles[normalizedsPath]
 		
@@ -70,6 +78,30 @@ function LoadTracker:ScriptLoadStart(normalizedsPath, unnormalizedsPath)
 	
 	return unnormalizedsPath
 end
+
+function LoadTracker:HookFileLoadBefore(scriptPath, selfOrFunc, funcName)
+	
+	local path = NormalizePath(scriptPath)
+	
+	if(self.LoadedScripts[tobeNorm]) then
+		error("cannot set FileLoadStarted hook for "..scriptPath.." because the file is already loaded")
+	end
+
+	local tbl = self.BeforeLoadedFileHooks[path]
+
+	if(not tbl) then
+		tbl = {}
+		self.BeforeLoadedFileHooks[path] = tbl
+	end
+
+	if(funcName) then
+    table.insert(tbl, function() selfOrFunc[funcName](selfOrFunc) end)
+  else
+    table.insert(tbl, selfOrFunc)
+  end
+
+end
+
 
 function LoadTracker:HookFileLoadFinished(scriptPath, selfOrFunc, funcName)
 	
