@@ -816,10 +816,15 @@ function ClassHooker:OnClassFullyDefined(classname, networkVars)
   
   if(ClassDeclaredCb) then
     for _,hook in ipairs(ClassDeclaredCb) do
-      if(type(hook) == "table") then
-        hook[1](hook[2], classname, networkVars)
+	  local networkVarsNew
+      
+	  if(type(hook) == "table") then
+        networkVarsNew = hook[1](hook[2], classname, networkVars)
       else
-        hook(classname, networkVars)
+        networkVarsNew = hook(classname, networkVars)
+		if newNetworkVars ~= nil then
+			networkVars = networkVarsNew
+		end
       end
     end
   end
@@ -830,6 +835,8 @@ function ClassHooker:OnClassFullyDefined(classname, networkVars)
       self:CreateAndSetClassHook(hooktbl, classname, funcName)
     end
   end
+  
+  return networkVars
 end
 
 function ClassHooker:OnLuaFullyLoaded()
@@ -1050,16 +1057,21 @@ if(not HotReload) then
   --Hook Shared.LinkClassToMap so we know when we can insert any hooks for a class
   local OrginalLinkClassToMap = Shared.LinkClassToMap
   
-  Shared.LinkClassToMap = function(...)
-   
-    local classname, entityname = ...
+  Shared.LinkClassToMap = function(classname, entityname, networkVars)
     
     --let the orignal function spit out an error if we don't have the correct args
     if(classname and entityname) then
-      ClassHooker:LinkClassToMap(...)
+      networkVarsNew = ClassHooker:LinkClassToMap(classname, entityname, networkVars)
+	  if networkVarsNew ~= nil then
+		networkVars = networkVarsNew
+	  end
     end
     
-    OrginalLinkClassToMap(...)
+	if networkVars ~= nil then
+		OrginalLinkClassToMap(classname, entityname, networkVars)
+	else
+		OrginalLinkClassToMap(classname, entityname)
+	end
   end
 
 else

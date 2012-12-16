@@ -27,6 +27,7 @@ MagnoBootsMixin.kNormalWallWalkRange = 0.3
 // jump is valid when you are close to a wall but not attached yet at this range
 MagnoBootsMixin.kJumpWallRange = 0.4
 MagnoBootsMixin.kJumpWallFeelerSize = 0.1
+MagnoBootsMixin.kMaxVerticalAirAccel = 12
 
 // when we slow down to less than 97% of previous speed we check for walls to attach to
 MagnoBootsMixin.kWallStickFactor = 1
@@ -323,6 +324,106 @@ function MagnoBootsMixin:GetRecentlyJumped()
 end
 AddFunctionContract(MagnoBootsMixin.GetRecentlyJumped, { Arguments = { "Entity" }, Returns = { "boolean" } })
 
+function MagnoBootsMixin:ModifyVelocity(input, velocity)
+
+    local viewCoords = self:GetViewCoords()
+
+    if self.jumpLandSpeed and self.timeOfLastJumpLand + 0.3 > Shared.GetTime() and input.move:GetLength() ~= 0 then
+    
+        // check if the current move is in the same direction as the requested move
+        local moveXZ = GetNormalizedVectorXZ( viewCoords:TransformVector(input.move) )
+        
+        if moveXZ:DotProduct(GetNormalizedVectorXZ(velocity)) > 0.5 then
+        
+            local currentSpeed = velocity:GetLength()
+            local prevY = velocity.y
+            
+            local scale = math.max(1, self.jumpLandSpeed / currentSpeed)        
+            velocity:Scale(scale)
+            velocity.y = prevY
+        
+        end
+    
+    end
+
+
+    Player.ModifyVelocity(self, input, velocity)
+
+
+    if not self:GetIsOnSurface() and input.move:GetLength() ~= 0 then
+
+        local moveLengthXZ = velocity:GetLengthXZ()
+        local previousY = velocity.y
+        local adjustedZ = false
+
+        if input.move.z ~= 0 then
+        
+            local redirectedVelocityZ = GetNormalizedVectorXZ(self:GetViewCoords().zAxis) * input.move.z
+            redirectedVelocityZ.y = 0
+            redirectedVelocityZ:Normalize()
+            
+            if input.move.z < 0 then
+            
+                if viewCoords:TransformVector(input.move):DotProduct(velocity) > 0 then
+                
+                    redirectedVelocityZ = redirectedVelocityZ + GetNormalizedVectorXZ(velocity) * 8
+                    redirectedVelocityZ:Normalize()
+                    
+                    local xzVelocity = Vector(velocity)
+                    xzVelocity.y = 0
+                    
+                    VectorCopy(velocity - (xzVelocity * input.time * 2), velocity)
+                    
+                end
+                
+            else
+            
+                redirectedVelocityZ = redirectedVelocityZ * input.time * Skulk.kAirZMoveWeight + GetNormalizedVectorXZ(velocity)
+                redirectedVelocityZ:Normalize()                
+                redirectedVelocityZ:Scale(moveLengthXZ)
+                redirectedVelocityZ.y = previousY
+                
+                adjustedZ = true
+                
+                VectorCopy(redirectedVelocityZ,  velocity)
+            
+            end
+        
+        end
+        
+        if input.move.x ~= 0  then
+        
+            local redirectedVelocityX = GetNormalizedVectorXZ(self:GetViewCoords().xAxis) * input.move.x
+            redirectedVelocityX.y = 0
+            redirectedVelocityX:Normalize()
+            
+            redirectedVelocityX = redirectedVelocityX * input.time * Skulk.kAirStrafeWeight + GetNormalizedVectorXZ(velocity)
+            
+            redirectedVelocityX:Normalize()            
+            redirectedVelocityX:Scale(moveLengthXZ)
+            redirectedVelocityX.y = previousY            
+            VectorCopy(redirectedVelocityX,  velocity)
+        
+        end
+        
+    end
+	
+	// accelerate XZ speed when falling down
+    if not self:GetIsOnSurface() and velocity:GetLengthXZ() < MagnoBootsMixin.kMaxVerticalAirAccel then
+    
+        local acceleration = 9
+        local accelFraction = Clamp( (-velocity.y - 3.5) / 7, 0, 1)
+        
+        local addAccel = GetNormalizedVectorXZ(velocity) * accelFraction * input.time * acceleration
+
+        velocity.x = velocity.x + addAccel.x
+        velocity.z = velocity.z + addAccel.z
+        
+    end
+    
+end
+AddFunctionContract(MagnoBootsMixin.ModifyVelocity, { Arguments = { "Entity", "Move", "Vector" }, Returns = { } })
+
 function MagnoBootsMixin:GetIsOnSurface()
 
     return Player.GetIsOnSurface(self) or self:GetIsWallWalking()
@@ -378,6 +479,67 @@ function MagnoBootsMixin:PerformsVerticalMove()
 	
 end
 AddFunctionContract(MagnoBootsMixin.PerformsVerticalMove, { Arguments = { "Entity" }, Returns = { "boolean" } })
+
+function MagnoBootsMixin:GetJumpVelocity(input, velocity)
+
+    local viewCoords = self:GetViewAngles():GetCoords()
+    
+    local soundEffectName = "jump"
+    
+    // we add the bonus in the direction the move is going
+    local move = input.move
+    move.x = move.x * 0.01
+    
+    if input.move:GetLength() ~= 0 then
+        self.bonusVec = viewCoords:TransformVector(move)
+    else
+        self.bonusVec = viewCoords.zAxis
+    end
+
+    self.bonusVec.y = 0
+    self.bonusVec:Normalize()
+    
+    if self:GetCanWallJump() then
+    
+        if not self:GetRecentlyWallJumped() then
+        
+            local previousVelLength = self:GetVelocityLength()
+    
+            velocity.x = velocity.x + self.bonusVec.x * Skulk.kWallJumpForce
+            velocity.z = velocity.z + self.bonusVec.z * Skulk.kWallJumpForce
+            
+            local speedXZ = velocity:GetLengthXZ()
+            if speedXZ < Skulk.kMinWallJumpSpeed then
+            
+                velocity.y = 0
+                velocity:Normalize()
+                velocity:Scale(Skulk.kMinWallJumpSpeed)
+                
+            end
+            
+            velocity.y = viewCoords.zAxis.y * Skulk.kWallJumpYDirection + Skulk.kWallJumpYBoost
+
+        end
+        
+        // spamming jump against a wall wont help
+        self.timeLastWallJump = Shared.GetTime()
+        
+    else
+        
+        velocity.y = math.sqrt(math.abs(2 * self:GetJumpHeight() * self:GetMixinConstants().kGravity))
+        
+    end
+    
+    self:TriggerEffects(soundEffectName, {surface = self:GetMaterialBelowPlayer()})
+    
+end
+AddFunctionContract(MagnoBootsMixin.GetJumpVelocity, { Arguments = { "Entity", "Move", "vector" }, Returns = { } })
+
+// Handle jump sounds ourselves
+function MagnoBootsMixin:GetPlayJumpSound()
+    return false
+end
+AddFunctionContract(MagnoBootsMixin.GetPlayJumpSound, { Arguments = { "Entity" }, Returns = { "boolean" } })
 
 function MagnoBootsMixin:HandleJump(input, velocity)
 

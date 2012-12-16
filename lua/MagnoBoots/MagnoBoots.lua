@@ -17,7 +17,7 @@ class 'MagnoBoots' (ScriptActor)
 
 MagnoBoots.kMapName = "magnoboots"
 
-MagnoBoots.kModelName = PrecacheAsset("models/marine/jetpack/jetpack.model")
+MagnoBoots.kModelName = PrecacheAsset("models/marine/MagBoots/magboots.model")
 MagnoBoots.kAttachPoint = "Boots"
 MagnoBoots.kPickupSound = PrecacheAsset("sound/NS2.fev/marine/common/pickup_jetpack")
 
