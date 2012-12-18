@@ -21,8 +21,8 @@ MagnoBootsMixin.kWallWalkCheckInterval = .1
 MagnoBootsMixin.kWallWalkNormalSmoothRate = 4
 // How big the spheres are that are casted out to find walls, "feelers".
 // The size is calculated so the "balls" touch each other at the end of their range
-MagnoBootsMixin.kNormalWallWalkFeelerSize = 0.25
-MagnoBootsMixin.kNormalWallWalkRange = 0.3
+MagnoBootsMixin.kNormalWallWalkFeelerSize = 0.3
+MagnoBootsMixin.kNormalWallWalkRange = 0.35
 
 // jump is valid when you are close to a wall but not attached yet at this range
 MagnoBootsMixin.kJumpWallRange = 0.4
@@ -31,6 +31,19 @@ MagnoBootsMixin.kMaxVerticalAirAccel = 12
 
 // when we slow down to less than 97% of previous speed we check for walls to attach to
 MagnoBootsMixin.kWallStickFactor = 1
+
+// force added to player, depends on timing
+MagnoBootsMixin.kWallJumpYBoost = 2.5
+MagnoBootsMixin.kWallJumpYDirection = 5
+
+MagnoBootsMixin.kMaxVerticalAirAccel = 12
+
+MagnoBootsMixin.kWallJumpForce = 1.2
+MagnoBootsMixin.kMinWallJumpSpeed = 9
+
+MagnoBootsMixin.kAirZMoveWeight = 5
+MagnoBootsMixin.kAirStrafeWeight = 2.5
+MagnoBootsMixin.kAirAccelerationFraction = 0.5
 
 MagnoBootsMixin.expectedMixins =
 {
@@ -378,7 +391,7 @@ function MagnoBootsMixin:ModifyVelocity(input, velocity)
                 
             else
             
-                redirectedVelocityZ = redirectedVelocityZ * input.time * Skulk.kAirZMoveWeight + GetNormalizedVectorXZ(velocity)
+                redirectedVelocityZ = redirectedVelocityZ * input.time * MagnoBootsMixin.kAirZMoveWeight + GetNormalizedVectorXZ(velocity)
                 redirectedVelocityZ:Normalize()                
                 redirectedVelocityZ:Scale(moveLengthXZ)
                 redirectedVelocityZ.y = previousY
@@ -397,7 +410,7 @@ function MagnoBootsMixin:ModifyVelocity(input, velocity)
             redirectedVelocityX.y = 0
             redirectedVelocityX:Normalize()
             
-            redirectedVelocityX = redirectedVelocityX * input.time * Skulk.kAirStrafeWeight + GetNormalizedVectorXZ(velocity)
+            redirectedVelocityX = redirectedVelocityX * input.time * MagnoBootsMixin.kAirStrafeWeight + GetNormalizedVectorXZ(velocity)
             
             redirectedVelocityX:Normalize()            
             redirectedVelocityX:Scale(moveLengthXZ)
@@ -424,12 +437,34 @@ function MagnoBootsMixin:ModifyVelocity(input, velocity)
 end
 AddFunctionContract(MagnoBootsMixin.ModifyVelocity, { Arguments = { "Entity", "Move", "Vector" }, Returns = { } })
 
+function MagnoBootsMixin:GetFrictionForce(input, velocity)
+
+    local friction = Player.GetFrictionForce(self, input, velocity)
+    if self:GetIsWallWalking() then
+        friction.y = -self:GetVelocity().y * self:GetGroundFrictionForce()
+    end
+    
+    return friction
+
+end
+AddFunctionContract(MagnoBootsMixin.GetFrictionForce, { Arguments = { "Entity", "Move", "Vector" }, Returns = { "Vector" } })
+
+function MagnoBootsMixin:GetGravityAllowed()
+    return not self:GetIsWallWalking()
+end
+AddFunctionContract(MagnoBootsMixin.GetGravityAllowed, { Arguments = { "Entity" }, Returns = { "boolean" } })
+
 function MagnoBootsMixin:GetIsOnSurface()
 
     return Player.GetIsOnSurface(self) or self:GetIsWallWalking()
 	
 end
 AddFunctionContract(MagnoBootsMixin.GetIsOnSurface, { Arguments = { "Entity" }, Returns = { "boolean" } })
+
+function MagnoBootsMixin:GetIsAffectedByAirFriction()
+    return not self:GetIsOnSurface()
+end
+AddFunctionContract(MagnoBootsMixin.GetIsAffectedByAirFriction, { Arguments = { "Entity" }, Returns = { "boolean" } })
 
 function MagnoBootsMixin:AdjustGravityForce(input, gravity)
 
@@ -505,19 +540,19 @@ function MagnoBootsMixin:GetJumpVelocity(input, velocity)
         
             local previousVelLength = self:GetVelocityLength()
     
-            velocity.x = velocity.x + self.bonusVec.x * Skulk.kWallJumpForce
-            velocity.z = velocity.z + self.bonusVec.z * Skulk.kWallJumpForce
+            velocity.x = velocity.x + self.bonusVec.x * MagnoBootsMixin.kWallJumpForce
+            velocity.z = velocity.z + self.bonusVec.z * MagnoBootsMixin.kWallJumpForce
             
             local speedXZ = velocity:GetLengthXZ()
-            if speedXZ < Skulk.kMinWallJumpSpeed then
+            if speedXZ < MagnoBootsMixin.kMinWallJumpSpeed then
             
                 velocity.y = 0
                 velocity:Normalize()
-                velocity:Scale(Skulk.kMinWallJumpSpeed)
+                velocity:Scale(MagnoBootsMixin.kMinWallJumpSpeed)
                 
             end
             
-            velocity.y = viewCoords.zAxis.y * Skulk.kWallJumpYDirection + Skulk.kWallJumpYBoost
+            velocity.y = viewCoords.zAxis.y * MagnoBootsMixin.kWallJumpYDirection + MagnoBootsMixin.kWallJumpYBoost
 
         end
         
