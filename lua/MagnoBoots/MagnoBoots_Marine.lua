@@ -97,21 +97,20 @@ function MagnoBootsMarine:AddNewFunctions()
 
 	Marine.kWallWalkCheckInterval = .1
 	// This is how quickly the 3rd person model will adjust to the new normal.
-	Marine.kWallWalkNormalSmoothRate = 4
+	Marine.kWallWalkNormalSmoothRate = 7
 	// How big the spheres are that are casted out to find walls, "feelers".
 	// The size is calculated so the "balls" touch each other at the end of their range
-	Marine.kNormalWallWalkFeelerSize = 0.3
-	Marine.kNormalWallWalkRange = 0.35
+	Marine.kNormalWallWalkFeelerSize = 0.25
+	Marine.kNormalWallWalkRange = 0.3
 
 	// jump is valid when you are close to a wall but not attached yet at this range
 	Marine.kJumpWallRange = 0.4
 	Marine.kJumpWallFeelerSize = 0.1
-	Marine.kMaxVerticalAirAccel = 12
 
 	// when we slow down to less than 97% of previous speed we check for walls to attach to
 	Marine.kWallStickFactor = 1
 
-	// force added to player, depends on timing
+	// force added to Marine, depends on timing
 	Marine.kWallJumpYBoost = 2.5
 	Marine.kWallJumpYDirection = 5
 
@@ -123,6 +122,16 @@ function MagnoBootsMarine:AddNewFunctions()
 	Marine.kAirZMoveWeight = 5
 	Marine.kAirStrafeWeight = 2.5
 	Marine.kAirAccelerationFraction = 0.5
+	
+	function Marine:GetAirMoveScalar()
+
+		if self:GetVelocityLength() < 8 then
+			return 1.0
+		else
+			return 0
+		end
+		
+	end
 
 	// required to trigger wall walking animation
 	function Marine:GetIsJumping()
@@ -328,6 +337,22 @@ function MagnoBootsMarine:AddNewFunctions()
 		end
 
 	end
+	
+	function Alien:GetMovementSpeedModifier()
+		return self:GetSlowSpeedModifier() + (self.infestationSpeedScalar * self:GetInfestationBonus())
+	end
+	
+	function Marine:GetAcceleration()
+		local acceleration = Marine.kAcceleration 
+    
+		if self:GetIsSprinting() then
+			acceleration = Marine.kAcceleration + (Marine.kSprintAcceleration - Marine.kAcceleration) * self:GetSprintingScalar()
+		end
+
+		acceleration = acceleration * self:GetInventorySpeedScalar()
+
+		return acceleration * self:GetCatalystMoveSpeedModifier()
+	end
 
 	function Marine:GetRecentlyJumped()
 
@@ -433,6 +458,10 @@ function MagnoBootsMarine:AddNewFunctions()
 		end
 		
 	end
+	
+	function Marine:GetAirFrictionForce()
+		return 0.25
+	end 
 
 	function Marine:GetFrictionForce(input, velocity)
 
