@@ -94,6 +94,10 @@ function MagnoBootsMarine:AddNewFunctions()
 	// Balance, movement, animation
 	Marine.kJumpRepeatTime = 0.1
 	Marine.kWallJumpInterval = 0.3
+	
+	Marine.kAcceleration = 140
+	Marine.kGroundFriction = 20
+	Marine.kGroundWalkFriction = 33
 
 	Marine.kWallWalkCheckInterval = .1
 	// This is how quickly the 3rd person model will adjust to the new normal.
@@ -122,6 +126,14 @@ function MagnoBootsMarine:AddNewFunctions()
 	Marine.kAirZMoveWeight = 5
 	Marine.kAirStrafeWeight = 2.5
 	Marine.kAirAccelerationFraction = 0.5
+	
+	// Override the marine extents
+	/*
+	Marine.kXExtents = .55
+	Marine.kYExtents = .55
+	Marine.kZExtents = .55
+	SetCachedTechData(kTechId.Marine, kTechDataMaxExtents, Vector(Marine.kXExtents, Marine.kYExtents, Marine.kZExtents))
+	*/
 	
 	function Marine:GetAirMoveScalar()
 
@@ -338,8 +350,29 @@ function MagnoBootsMarine:AddNewFunctions()
 
 	end
 	
-	function Alien:GetMovementSpeedModifier()
-		return self:GetSlowSpeedModifier() + (self.infestationSpeedScalar * self:GetInfestationBonus())
+	function Marine:GetMaxSpeed(possible)
+	
+		if possible then
+			return Marine.kRunMaxSpeed
+		end
+
+		local onInfestation = self:GetGameEffectMask(kGameEffect.OnInfestation)
+		local sprintingScalar = self:GetSprintingScalar()
+		local maxSprintSpeed = ConditionalValue(onInfestation, Marine.kWalkMaxSpeed + (Marine.kRunInfestationMaxSpeed - Marine.kWalkMaxSpeed)*sprintingScalar, Marine.kWalkMaxSpeed + (Marine.kRunMaxSpeed - Marine.kWalkMaxSpeed)*sprintingScalar)
+		local maxSpeed = ConditionalValue(self:GetIsSprinting(), maxSprintSpeed, Marine.kWalkMaxSpeed)
+		
+		// Take into account our weapon inventory and current weapon. Assumes a vanilla marine has a scalar of around .8.
+		local inventorySpeedScalar = self:GetInventorySpeedScalar() + .17
+
+		// Take into account crouching
+		if not self:GetIsJumping() then
+			maxSpeed = ( 1 - self:GetCrouchAmount() * self:GetCrouchSpeedScalar() ) * maxSpeed
+		end
+
+		local adjustedMaxSpeed = maxSpeed * self:GetCatalystMoveSpeedModifier() * inventorySpeedScalar 
+		//Print("Adjusted max speed => %.2f (without inventory: %.2f)", adjustedMaxSpeed, adjustedMaxSpeed / inventorySpeedScalar )
+		return adjustedMaxSpeed
+		
 	end
 	
 	function Marine:GetAcceleration()
@@ -459,6 +492,29 @@ function MagnoBootsMarine:AddNewFunctions()
 		
 	end
 	
+	function Marine:ConstrainMoveVelocity(moveVelocity)
+
+		// allow acceleration in air for skulks   
+		if not self:GetIsOnSurface() then
+		
+			local speedFraction = Clamp(self:GetVelocity():GetLengthXZ() / self:GetMaxSpeed(), 0, 1)
+			speedFraction = 1 - (speedFraction * speedFraction)
+			moveVelocity:Scale(speedFraction * Marine.kAirAccelerationFraction)
+			
+			if self:GetVelocity():GetLengthXZ() > 30 then
+				Print("system crash!")
+			end
+			
+		end
+ 
+	end
+	
+	function Marine:GetGroundFrictionForce()   
+
+		return ConditionalValue(self.crouching or self.isUsing, Marine.kGroundWalkFriction, Marine.kGroundFriction) 
+    
+	end
+	
 	function Marine:GetAirFrictionForce()
 		return 0.25
 	end 
@@ -520,6 +576,13 @@ function MagnoBootsMarine:AddNewFunctions()
 		
 		return Player.GetIsCloseToGround(self, distanceToGround)
 		
+	end
+	
+	// Play footsteps when walking up a wall.
+	function Marine:GetPlayFootsteps()
+	
+		return self:GetVelocityLength() > .75 and self:GetIsOnSurface() and self:GetIsAlive()
+	
 	end
 
 	function Marine:GetIsOnGround()
