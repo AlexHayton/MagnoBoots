@@ -49,9 +49,9 @@ function MagnoBootsTechData:BuildTechData_Hook(handle)
 	local techData = handle:GetReturn()
 	
 	// Insert upgrades into TechData
-	local magnoBoots = { [kTechDataId] = kTechId.MagnoBoots,       [kTechDataImplemented] = true,        [kTechDataMapName] = MagnoBoots.kMapName,                   [kTechDataDisplayName] = "MAGNO_BOOTS", [kTechDataModel] = MagnoBoots.kModelName, [kTechDataCostKey] = kMagnoBootsCost, [kTechDataSpawnHeightOffset] = kCommanderEquipmentDropSpawnHeight }
-	local magnoBootsTech = { [kTechDataId] = kTechId.MagnoBootsTech,     [kTechDataImplemented] = true,      [kTechDataCostKey] = kMagnoBootsTechResearchCost,               [kTechDataResearchTimeKey] = kMagnoBootsTechResearchTime,     [kTechDataDisplayName] = "MAGNO_BOOTS_TECH" }
-	local dropMagnoBoots = { [kTechDataId] = kTechId.DropMagnoBoots,   [kTechDataMapName] = MagnoBoots.kMapName, [kTechDataDisplayName] = "MAGNO_BOOTS", [kTechIDShowEnables] = false, [kTechDataTooltipInfo] =  "MAGNO_BOOTS_TOOLTIP", [kTechDataModel] = MagnoBoots.kModelName, [kTechDataCostKey] = kMagnoBootsCost, [kStructureAttachId] = kTechId.PrototypeLab, [kStructureAttachRange] = kArmoryWeaponAttachRange, [kStructureAttachRequiresPower] = true }
+	local magnoBoots = { [kTechDataId] = kTechId.MagnoBoots,       [kTechDataImplemented] = true,        [kTechDataMapName] = MagnoBoots.kMapName,                   [kTechDataDisplayName] = "MAGNO_BOOTS", [kTechDataModel] = MagnoBoots.kModelName, [kTechDataCostKey] = MagnoBoots.kCost, [kTechDataSpawnHeightOffset] = kCommanderEquipmentDropSpawnHeight }
+	local magnoBootsTech = { [kTechDataId] = kTechId.MagnoBootsTech,     [kTechDataImplemented] = true,      [kTechDataCostKey] = MagnoBoots.kResearchCost,               [kTechDataResearchTimeKey] = MagnoBoots.kResearchTime,     [kTechDataDisplayName] = "MAGNO_BOOTS_TECH" }
+	local dropMagnoBoots = { [kTechDataId] = kTechId.DropMagnoBoots,   [kTechDataMapName] = MagnoBoots.kMapName, [kTechDataDisplayName] = "MAGNO_BOOTS", [kTechIDShowEnables] = false, [kTechDataTooltipInfo] =  "MAGNO_BOOTS_TOOLTIP", [kTechDataModel] = MagnoBoots.kModelName, [kTechDataCostKey] = MagnoBoots.kCost, [kStructureAttachId] = kTechId.PrototypeLab, [kStructureAttachRange] = kArmoryWeaponAttachRange, [kStructureAttachRequiresPower] = true }
 	
 	table.insert(techData, magnoBoots)
 	table.insert(techData, magnoBootsTech)

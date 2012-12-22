@@ -20,6 +20,9 @@ MagnoBoots.kMapName = "magnoboots"
 MagnoBoots.kModelName = PrecacheAsset("models/marine/MagBoots/magboots.model")
 MagnoBoots.kAttachPoint = "Boots"
 MagnoBoots.kPickupSound = PrecacheAsset("sound/NS2.fev/marine/common/pickup_jetpack")
+MagnoBoots.kCost = 5
+MagnoBoots.kResearchCost = 15
+MagnoBoots.kResearchTime = 60
 
 MagnoBoots.kThinkInterval = .5
 
@@ -38,6 +41,8 @@ function MagnoBoots:OnCreate ()
     InitMixin(self, ModelMixin)
     InitMixin(self, TeamMixin)
     InitMixin(self, SelectableMixin)
+	
+    self:SetLagCompensated(false)
     
     InitMixin(self, PickupableMixin, { kRecipientType = "Marine" })
     

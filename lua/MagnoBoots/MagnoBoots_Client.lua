@@ -9,6 +9,7 @@
 
 // Load the hooks
 Script.Load("lua/MagnoBoots/MagnoBoots_SharedHooks.lua")
+Script.Load("lua/MagnoBoots/MagnoBoots_CommanderHelp.lua")
 
 // Load the main NS2 script for this VM.
 Script.Load("lua/Client.lua")

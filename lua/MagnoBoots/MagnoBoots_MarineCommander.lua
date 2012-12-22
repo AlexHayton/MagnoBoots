@@ -8,17 +8,21 @@
 // MagnoBoots_MarineCommander.lua
 // Hooks for the MarineCommander class...
 
-if Server then
+MagnoBootsMarineCommander = MagnoBootsMarineCommander or {}
+ClassHooker:Mixin("MagnoBootsMarineCommander")
 
-	MagnoBootsMarineCommander = MagnoBootsMarineCommander or {}
-	ClassHooker:Mixin("MagnoBootsMarineCommander")
-		
-	function MagnoBootsMarineCommander:OnLoad()
-	   
-		ClassHooker:SetClassCreatedIn("MarineCommander", "lua/MarineCommander.lua") 
+function MagnoBootsMarineCommander:OnLoad()
+   
+	ClassHooker:SetClassCreatedIn("MarineCommander", "lua/MarineCommander.lua") 
+	if Server then 
 		self:ReplaceClassFunction("MarineCommander", "ProcessTechTreeActionForEntity", "ProcessTechTreeActionForEntity_Hook")
-		
+	elseif Client then
+		self:PostHookClassFunction("MarineCommander", "GetButtonTable", "GetButtonTable_Hook"):SetPassHandle(true)
 	end
+	
+end
+
+if Server then
 
 	local function GetIsEquipment(techId)
 
@@ -76,7 +80,17 @@ if Server then
 		return success, keepProcessing
 
 	end
-	
-	MagnoBootsMarineCommander:OnLoad()
-	
 end
+
+if Client then	
+	function MagnoBootsMarineCommander:GetButtonTable_Hook(handle)
+		local gMarineMenuButtons = handle:GetReturn()
+		for index, menuItem in ipairs(gMarineMenuButtons[kTechId.AssistMenu]) do
+			if menuItem == kTechId.None then
+				gMarineMenuButtons[kTechId.AssistMenu] = kTechId.DropMagnoBoots
+			end
+		end
+	end
+end
+
+MagnoBootsMarineCommander:OnLoad()
