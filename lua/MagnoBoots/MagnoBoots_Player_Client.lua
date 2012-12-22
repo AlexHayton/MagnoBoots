@@ -5,8 +5,8 @@
 //		
 //________________________________
 
-// MagnoBoots_CommanderHelp.lua
-// Hooks for the CommanderHelp class...
+// MagnoBoots_Player_Client.lua
+// Client Hooks for the Player class...
 
 MagnoBootsPlayerClient = MagnoBootsPlayerClient or {}
 ClassHooker:Mixin("MagnoBootsPlayerClient")

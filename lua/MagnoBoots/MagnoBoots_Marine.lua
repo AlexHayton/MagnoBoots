@@ -198,7 +198,7 @@ function MagnoBootsMarine:AddNewFunctions()
 	function Marine:GetIsWallWalkingPossible() 
 
 		// Can only wall walk if you have magno boots
-		return self:GetHasMagnoBoots() and not self.crouching and not self:GetRecentlyJumped()
+		return self:GetHasMagnoBoots() and not self:GetRecentlyJumped() /* and not self.crouching */ 
 		
 	end
 	

@@ -13,6 +13,8 @@ ClassHooker:Mixin("MagnoBootsCommanderHelp")
     
 function MagnoBootsCommanderHelp:OnLoad()
    
+	// Force load the commanderhelp utility functions
+	LoadTracker:LoadScriptAfter("lua/Shared.lua", "lua/CommanderHelp.lua", nil)
     self:PostHookFunction("CommanderHelp_GetWorldButtons", "CommanderHelp_GetWorldButtons_Hook"):SetPassHandle(true)
     
 end
