@@ -95,9 +95,9 @@ function MagnoBootsMarine:AddNewFunctions()
 	Marine.kJumpRepeatTime = 0.1
 	Marine.kWallJumpInterval = 0.3
 	
-	Marine.kAcceleration = 140
-	Marine.kGroundFriction = 20
-	Marine.kGroundWalkFriction = 33
+	Marine.kAcceleration = 100
+	Marine.kGroundFriction = 16
+	Marine.kGroundWalkFriction = 28
 
 	Marine.kWallWalkCheckInterval = .1
 	// This is how quickly the 3rd person model will adjust to the new normal.
@@ -127,13 +127,11 @@ function MagnoBootsMarine:AddNewFunctions()
 	Marine.kAirStrafeWeight = 2.5
 	Marine.kAirAccelerationFraction = 0.5
 	
-	// Override the marine extents
-	/*
-	Marine.kXExtents = .55
-	Marine.kYExtents = .55
-	Marine.kZExtents = .55
-	SetCachedTechData(kTechId.Marine, kTechDataMaxExtents, Vector(Marine.kXExtents, Marine.kYExtents, Marine.kZExtents))
-	*/
+	// Override the marine extents for physics purposes.
+	//Marine.kXExtents = .55
+	//Marine.kYExtents = .65
+	//Marine.kZExtents = .55
+	//SetCachedTechData(kTechId.Marine, kTechDataMaxExtents, Vector(Marine.kXExtents, Marine.kYExtents, Marine.kZExtents))
 	
 	function Marine:GetAirMoveScalar()
 
@@ -373,18 +371,6 @@ function MagnoBootsMarine:AddNewFunctions()
 		//Print("Adjusted max speed => %.2f (without inventory: %.2f)", adjustedMaxSpeed, adjustedMaxSpeed / inventorySpeedScalar )
 		return adjustedMaxSpeed
 		
-	end
-	
-	function Marine:GetAcceleration()
-		local acceleration = Marine.kAcceleration 
-    
-		if self:GetIsSprinting() then
-			acceleration = Marine.kAcceleration + (Marine.kSprintAcceleration - Marine.kAcceleration) * self:GetSprintingScalar()
-		end
-
-		acceleration = acceleration * self:GetInventorySpeedScalar()
-
-		return acceleration * self:GetCatalystMoveSpeedModifier()
 	end
 
 	function Marine:GetRecentlyJumped()

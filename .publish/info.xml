@@ -1,8 +1,8 @@
 <options>
     <build></build>
-    <description>Magno boots for NS2</description>
+    <description>Magno boots for NS2. Use cheats 1, then &quot;spawn magnoboots&quot; to spawn some boots that let marines walk on walls!</description>
     <id>114984474</id>
     <kind>Gameplay</kind>
     <title>Magno Boots for NS2</title>
-    <visibility>Friends Only</visibility>
+    <visibility>Public</visibility>
 </options>
